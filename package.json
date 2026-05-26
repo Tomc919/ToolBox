@@ -1,0 +1,35 @@
+{
+  "name": "toolbox",
+  "version": "1.0.0",
+  "description": "个人工具箱 - 统一管理和启动各种工具资源",
+  "main": "./out/main/index.js",
+  "author": "ToolBox",
+  "license": "MIT",
+  "scripts": {
+    "dev": "node scripts/run.mjs dev",
+    "build": "node scripts/run.mjs build",
+    "preview": "node scripts/run.mjs preview",
+    "postinstall": "electron-builder install-app-deps",
+    "pack": "electron-vite build && electron-builder --dir",
+    "dist": "electron-vite build && electron-builder",
+    "dist:win": "electron-vite build && electron-builder --win",
+    "dist:win:portable": "electron-vite build && electron-builder --win --config.win.target=portable"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "better-sqlite3": "^11.7.0",
+    "element-plus": "^2.9.0",
+    "pinia": "^2.2.0",
+    "vue": "^3.5.0",
+    "vue-router": "^4.4.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^3.6.0",
+    "@vitejs/plugin-vue": "^5.2.0",
+    "electron": "33.0.0",
+    "electron-builder": "^25.1.0",
+    "electron-vite": "^2.0.0",
+    "typescript": "^5.6.0",
+    "vue-tsc": "^2.2.0"
+  }
+}

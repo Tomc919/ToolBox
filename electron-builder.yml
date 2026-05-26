@@ -1,0 +1,37 @@
+appId: com.toolbox.app
+productName: ToolBox
+directories:
+  output: release
+  buildResources: resources
+
+files:
+  - out/**/*
+
+asar: true
+asarUnpack:
+  - "**/*.node"
+  - "**/better-sqlite3/**"
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  sign: null
+  requestedExecutionLevel: asInvoker
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  artifactName: ToolBox-Setup-${version}.${ext}
+
+portable:
+  artifactName: ToolBox-${version}-portable.exe
+
+extraResources:
+  - from: resources/icons/
+    to: icons/
+    filter:
+      - "*.png"
+
+npmRebuild: true
