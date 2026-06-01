@@ -51,7 +51,7 @@ const emit = defineEmits<{
 const launchLabel = computed(() => {
   const map: Record<string, string> = {
     exe: '应用程序', jar: 'Java', python: 'Python',
-    powershell: 'PowerShell', command: '脚本', custom: '自定义', url: '链接', ssh: 'SSH'
+    powershell: 'PowerShell', command: '脚本', custom: '自定义', url: '链接', ssh: 'SSH',txt:'文本文档'
   }
   return map[props.tool.launch_type] || props.tool.launch_type
 })

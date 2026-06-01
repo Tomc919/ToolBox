@@ -1,34 +1,45 @@
 <template>
-  <div class="app-shell">
-    <aside class="app-sidebar" :class="{ collapsed: appStore.sidebarCollapsed }" :style="{ width: appStore.sidebarCollapsed ? '68px' : '240px' }">
-      <div class="sidebar-drag">
-        <div class="traffic-lights">
-          <button class="tl-btn tl-close" @click="win.close()" title="关闭" />
-          <button class="tl-btn tl-min" @click="win.minimize()" title="最小化" />
-          <button class="tl-btn tl-max" @click="win.maximize()" title="最大化" />
+  <div class="app-shell" :class="{ standalone: isStandalone }">
+    <template v-if="!isStandalone">
+      <aside class="app-sidebar" :class="{ collapsed: appStore.sidebarCollapsed }" :style="{ width: appStore.sidebarCollapsed ? '68px' : '240px' }">
+        <div class="sidebar-drag">
+          <div class="traffic-lights">
+            <button class="tl-btn tl-close" @click="win.close()" title="关闭" />
+            <button class="tl-btn tl-min" @click="win.minimize()" title="最小化" />
+            <button class="tl-btn tl-max" @click="win.maximize()" title="最大化" />
+          </div>
         </div>
+        <AppSidebar />
+      </aside>
+      <div class="app-body">
+        <header class="app-topbar">
+          <AppHeader />
+        </header>
+        <main class="app-content">
+          <router-view />
+        </main>
       </div>
-      <AppSidebar />
-    </aside>
-
-    <div class="app-body">
-      <header class="app-topbar">
-        <AppHeader />
-      </header>
+    </template>
+    <template v-else>
       <main class="app-content">
         <router-view />
       </main>
-    </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import { useAppStore } from '@/stores/app'
 
 const appStore = useAppStore()
+const route = useRoute()
 const win = window.electronAPI.window
+
+const isStandalone = computed(() => route.query.standalone === '1')
 </script>
 
 <style scoped>
@@ -104,5 +115,16 @@ const win = window.electronAPI.window
   overflow-y: auto;
   padding: 24px 28px;
   background: transparent;
+}
+
+/* --- Standalone window (document viewer) --- */
+.app-shell.standalone {
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  background: var(--apple-bg);
+}
+.app-shell.standalone .app-content {
+  padding: 0;
 }
 </style>

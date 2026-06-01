@@ -63,6 +63,14 @@ export const useCategoryStore = defineStore('category', () => {
     }
   }
 
+  function isParent(id: number): boolean {
+    return categories.value.some(c => c.parent_id === id)
+  }
+
+  function getCategoryNameById(id: number): string {
+    return categories.value.find(c => c.id === id)?.name ?? ''
+  }
+
   function selectCategory(id: number | null): void {
     selectedId.value = id
   }
@@ -97,6 +105,8 @@ export const useCategoryStore = defineStore('category', () => {
     tree,
     currentCategory,
     loadCategories,
+    isParent,
+    getCategoryNameById,
     selectCategory,
     addCategory,
     editCategory,

@@ -5,7 +5,7 @@ export interface Category {
   sort: number
 }
 
-export type LaunchType = 'exe' | 'jar' | 'python' | 'powershell' | 'command' | 'url' | 'ssh' | 'custom'
+export type LaunchType = 'exe' | 'jar' | 'python' | 'powershell' | 'command' | 'url' | 'ssh' | 'txt' | 'custom'
 
 export interface Tool {
   id: number

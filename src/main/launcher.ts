@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process'
+import { spawn, exec } from 'node:child_process'
 import { shell } from 'electron'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -67,28 +67,45 @@ function safeSpawn(cmd: string, args: string[], opts: import('child_process').Sp
   })
 }
 
+function winExeCmd(target: string, args: string[]): string {
+  const quoted = [`"${target}"`, ...args.map(a => `"${a}"`)].join(' ')
+  // Use start to detach the GUI process from our Node process
+  return `start "" ${quoted}`
+}
+
 function launchExe(tool: Tool): Promise<LaunchResult> {
   const target = tool.target
   if (!fs.existsSync(target)) {
     return Promise.resolve({ success: false, error: `文件不存在: ${target}` })
   }
   const ext = path.extname(target).toLowerCase()
-  // MSI installers need msiexec
-  if (ext === '.msi') {
-    return safeSpawn('msiexec', ['/i', target, ...parseArgs(tool.args)], {
-      cwd: tool.working_dir || path.dirname(target),
-      detached: true,
-      stdio: 'ignore',
-      shell: false
+  const cwd = tool.working_dir || path.dirname(target)
+
+  return new Promise((resolve) => {
+    if (ext === '.msi') {
+      const child = spawn('msiexec', ['/i', target, ...parseArgs(tool.args)], {
+        cwd,
+        detached: true,
+        stdio: 'ignore',
+        shell: false
+      })
+      child.on('error', (err) => resolve({ success: false, error: err.message }))
+      child.on('spawn', () => {
+        child.removeAllListeners()
+        child.unref()
+        resolve({ success: true, pid: child.pid! })
+      })
+      setTimeout(() => {
+        resolve({ success: false, error: '进程启动超时' })
+      }, 8000)
+      return
+    }
+    // exec handles path quoting natively; resolve immediately —
+    // start "" returns fast and the OS takes over launching the app
+    exec(winExeCmd(target, parseArgs(tool.args)), { cwd }, (err) => {
+      if (err) console.error('launchExe error:', err.message)
     })
-  }
-  // Use shell:true for better Windows compatibility (handles EACCES / UAC)
-  return safeSpawn(target, parseArgs(tool.args), {
-    cwd: tool.working_dir || path.dirname(target),
-    detached: true,
-    stdio: 'ignore',
-    windowsHide: false,
-    shell: true
+    resolve({ success: true })
   })
 }
 
@@ -193,9 +210,33 @@ function launchUrl(tool: Tool): Promise<LaunchResult> {
     .catch((err: Error) => ({ success: false, error: err.message }))
 }
 
+function launchTxt(tool: Tool): Promise<LaunchResult> {
+  if (!fs.existsSync(tool.target)){
+    return Promise.resolve({ success: false, error: `文件不存在: ${tool.target}` })
+  }
+  return shell.openPath(tool.target)
+  .then((errMsg) =>{
+    if (errMsg) return { success: false, error: errMsg }
+    return { success: true }
+  })
+}
+
 function launchSsh(tool: Tool): Promise<LaunchResult> {
   const host = tool.target.replace(/^ssh:\/\//, '')
-  return safeSpawn('ssh', [host, ...parseArgs(tool.args)], {
+  const sshArgs = [host, ...parseArgs(tool.args)]
+
+  if (process.platform === 'win32') {
+    // Open a new visible terminal window for interactive SSH session
+    const sshCmd = `ssh ${sshArgs.join(' ')}`
+    return safeSpawn('cmd.exe', ['/c', 'start', '"SSH"', 'cmd.exe', '/k', sshCmd], {
+      detached: true,
+      stdio: 'ignore',
+      shell: false
+    })
+  }
+
+  // macOS/Linux fallback
+  return safeSpawn('ssh', sshArgs, {
     detached: true,
     stdio: 'inherit',
     shell: true
@@ -225,7 +266,8 @@ const LAUNCHERS: Record<string, (tool: Tool) => Promise<LaunchResult>> = {
   command: launchCommand,
   custom: launchCustom,
   url: launchUrl,
-  ssh: launchSsh
+  ssh: launchSsh,
+  txt: launchTxt
 }
 
 export async function launch(tool: Tool): Promise<LaunchResult> {

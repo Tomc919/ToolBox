@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { Monitor, Connection, Link, DataAnalysis, Cpu, Operation, Platform } from '@element-plus/icons-vue'
+import { Monitor, Connection, Link, DataAnalysis, Cpu, Operation, Platform, Document } from '@element-plus/icons-vue'
 
 const props = defineProps<{ toolId: number; launchType: string }>()
 
@@ -25,7 +25,8 @@ const typeInfo = computed(() => {
     powershell: { icon: Cpu, color: '#5B8DEF' },
     command: { icon: Operation, color: '#8E8E93' },
     url: { icon: Link, color: '#FF6B6B' },
-    ssh: { icon: Connection, color: '#8E8E93' }
+    ssh: { icon: Connection, color: '#8E8E93' },
+    txt: { icon: Document, color: '#4A90D9' }
   }
   return map[props.launchType] || { icon: Monitor, color: '#8E8E93' }
 })

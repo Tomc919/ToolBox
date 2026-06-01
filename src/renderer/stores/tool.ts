@@ -4,8 +4,16 @@ import * as api from '@/api/ipc'
 import type { Tool, ToolInput, ToolUpdate } from '@shared/types'
 import { ElMessage } from 'element-plus'
 
+export interface ToolGroup {
+  categoryId: number
+  categoryName: string
+  tools: Tool[]
+}
+
 export const useToolStore = defineStore('tool', () => {
   const tools = ref<Tool[]>([])
+  const toolGroups = ref<ToolGroup[]>([])
+  const isGroupedView = ref(false)
   const loading = ref(false)
   const searchQuery = ref('')
   const isSearching = ref(false)
@@ -16,9 +24,39 @@ export const useToolStore = defineStore('tool', () => {
     loading.value = true
     isSearching.value = false
     searchQuery.value = ''
+    isGroupedView.value = false
     viewMode.value = categoryId !== null ? 'category' : 'all'
     try {
       tools.value = await api.fetchToolsByCategory(categoryId)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function loadByParentCategory(parentId: number, getCategoryName: (id: number) => string): Promise<void> {
+    loading.value = true
+    isSearching.value = false
+    searchQuery.value = ''
+    isGroupedView.value = true
+    viewMode.value = 'category'
+    try {
+      const allTools = await api.fetchToolsByParentCategory(parentId)
+      const groups = new Map<number, Tool[]>()
+      for (const tool of allTools) {
+        if (tool.category_id !== null) {
+          const list = groups.get(tool.category_id)
+          if (list) {
+            list.push(tool)
+          } else {
+            groups.set(tool.category_id, [tool])
+          }
+        }
+      }
+      toolGroups.value = Array.from(groups.entries()).map(([catId, catTools]) => ({
+        categoryId: catId,
+        categoryName: getCategoryName(catId),
+        tools: catTools
+      }))
     } finally {
       loading.value = false
     }
@@ -107,6 +145,7 @@ export const useToolStore = defineStore('tool', () => {
     isSearching.value = false
     searchQuery.value = ''
     viewMode.value = 'recent'
+    isGroupedView.value = false
     try {
       tools.value = await api.fetchRecentTools(limit)
     } finally {
@@ -119,6 +158,7 @@ export const useToolStore = defineStore('tool', () => {
     isSearching.value = false
     searchQuery.value = ''
     viewMode.value = 'favorites'
+    isGroupedView.value = false
     try {
       tools.value = await api.fetchFavoriteTools()
     } finally {
@@ -128,12 +168,15 @@ export const useToolStore = defineStore('tool', () => {
 
   return {
     tools,
+    toolGroups,
+    isGroupedView,
     loading,
     searchQuery,
     isSearching,
     searchScope,
     viewMode,
     loadByCategory,
+    loadByParentCategory,
     search,
     createTool,
     updateTool,

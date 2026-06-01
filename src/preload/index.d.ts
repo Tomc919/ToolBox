@@ -10,6 +10,7 @@ interface ElectronAPI {
   }
   tool: {
     listByCategory: (categoryId: number | null) => Promise<Tool[]>
+    listByParentCategory: (parentId: number) => Promise<Tool[]>
     search: (query: string) => Promise<Tool[]>
     create: (data: ToolInput) => Promise<Tool>
     update: (id: number, data: ToolUpdate) => Promise<Tool | undefined>
@@ -37,10 +38,14 @@ interface ElectronAPI {
     close: () => Promise<void>
     hide: () => Promise<void>
     isMaximized: () => Promise<boolean>
+    openDocument: (filePath: string, fileName: string) => Promise<void>
   }
   settings: {
     get: () => Promise<{ autoStart: boolean; shortcut: string }>
     update: (partial: { autoStart?: boolean; shortcut?: string }) => Promise<{ autoStart: boolean; shortcut: string }>
+  }
+  file: {
+    readText: (filePath: string) => Promise<string>
   }
 }
 

@@ -13,7 +13,7 @@
         {{ categoryStore.currentCategory.name }}
       </span>
       <span class="header-title" v-else>全部工具</span>
-      <span class="header-count" v-if="!toolStore.loading">({{ toolStore.tools.length }})</span>
+      <span class="header-count" v-if="!toolStore.loading">({{ totalToolCount }})</span>
     </div>
     <div class="header-center">
       <SearchBar />
@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Fold, Expand, Plus } from '@element-plus/icons-vue'
 import SearchBar from '@/components/search/SearchBar.vue'
 import ToolDialog from '@/components/tool/ToolDialog.vue'
@@ -42,6 +42,13 @@ const toolStore = useToolStore()
 
 const showToolDialog = ref(false)
 
+const totalToolCount = computed(() => {
+  if (toolStore.isGroupedView) {
+    return toolStore.toolGroups.reduce((sum, g) => sum + g.tools.length, 0)
+  }
+  return toolStore.tools.length
+})
+
 async function onToolSaved(): Promise<void> {
   showToolDialog.value = false
   if (toolStore.isSearching) {
@@ -51,7 +58,12 @@ async function onToolSaved(): Promise<void> {
   } else if (toolStore.viewMode === 'recent') {
     await toolStore.loadRecent()
   } else {
-    await toolStore.loadByCategory(categoryStore.selectedId)
+    const id = categoryStore.selectedId
+    if (id !== null && categoryStore.isParent(id)) {
+      await toolStore.loadByParentCategory(id, (catId) => categoryStore.getCategoryNameById(catId))
+    } else {
+      await toolStore.loadByCategory(id)
+    }
   }
 }
 </script>

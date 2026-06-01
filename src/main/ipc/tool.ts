@@ -7,6 +7,10 @@ export function registerToolHandlers(): void {
     return toolRepo.getByCategory(categoryId)
   })
 
+  ipcMain.handle('tool:list-by-parent-category', async (_event, parentId: number) => {
+    return toolRepo.getByParentCategory(parentId)
+  })
+
   ipcMain.handle('tool:search', async (_event, query: string, scope?: toolRepo.SearchScope) => {
     return toolRepo.search(query, scope)
   })
@@ -34,4 +38,5 @@ export function registerToolHandlers(): void {
   ipcMain.handle('tool:get-favorites', async () => {
     return toolRepo.getFavorites()
   })
+
 }

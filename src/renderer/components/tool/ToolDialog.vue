@@ -23,6 +23,7 @@
               <el-option label="CMD / BAT" value="command" />
               <el-option label="网址链接" value="url" />
               <el-option label="SSH 连接" value="ssh" />
+              <el-option label="文本文件" value="txt" />
               <el-option label="自定义命令" value="custom" />
             </el-select>
           </el-form-item>
@@ -111,7 +112,7 @@ const form = ref({
   icon_path: '', category_id: null as number | null
 })
 
-const isFileType = computed(() => ['exe','jar','python','powershell','command','custom'].includes(form.value.launch_type))
+const isFileType = computed(() => ['exe','jar','python','powershell','command','custom','txt'].includes(form.value.launch_type))
 const isUrlType = computed(() => form.value.launch_type === 'url')
 const isSshType = computed(() => form.value.launch_type === 'ssh')
 const isScriptType = computed(() => ['jar','python','powershell','command'].includes(form.value.launch_type))
@@ -131,7 +132,8 @@ const targetPlaceholder = computed(() => {
     exe: '选择 .exe 文件', jar: '选择 .jar 文件', python: '选择 .py 脚本',
     powershell: '选择 .ps1 脚本', command: '选择 .bat/.cmd 文件',
     custom: '选择要运行的文件',
-    url: 'https://...', ssh: 'user@host'
+    url: 'https://...', ssh: 'user@host',txt: '选择 .txt/.md/.log 文件'
+
   }
   return map[form.value.launch_type] || ''
 })
@@ -170,6 +172,7 @@ const extFilters: Record<string, { name: string; extensions: string[] }> = {
   python: { name: 'Python 脚本', extensions: ['py'] },
   powershell: { name: 'PowerShell 脚本', extensions: ['ps1'] },
   command: { name: '脚本/批处理', extensions: ['bat', 'cmd', 'vbs', 'wsf'] },
+  txt: { name: '文本文档', extensions: ['txt', 'md', 'log', 'csv', 'json', 'xml', 'yaml', 'yml', 'toml', 'ini', 'cfg', 'conf', 'properties'] },
   custom: { name: '所有文件', extensions: ['*'] }
 }
 
@@ -198,10 +201,11 @@ async function browseIcon(): Promise<void> {
 
 async function handleSave(): Promise<void> {
   if (!form.value.name.trim() || !form.value.target.trim()) return
+  const data = { ...form.value, category_id: form.value.category_id ?? 1 }
   if (props.tool) {
-    await toolStore.updateTool(props.tool.id, { ...form.value })
+    await toolStore.updateTool(props.tool.id, data)
   } else {
-    await toolStore.createTool({ ...form.value })
+    await toolStore.createTool(data)
   }
   emit('saved')
   emit('update:visible', false)

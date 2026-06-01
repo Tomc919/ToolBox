@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   tool: {
     listByCategory: (categoryId: number | null) => ipcRenderer.invoke('tool:list-by-category', categoryId),
+    listByParentCategory: (parentId: number) => ipcRenderer.invoke('tool:list-by-parent-category', parentId),
     search: (query: string, scope?: { type: string; categoryId?: number | null }) => ipcRenderer.invoke('tool:search', query, scope),
     create: (data: ToolInput) => ipcRenderer.invoke('tool:create', data),
     update: (id: number, data: ToolUpdate) => ipcRenderer.invoke('tool:update', id, data),
@@ -39,10 +40,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     maximize: () => ipcRenderer.invoke('window:maximize'),
     close: () => ipcRenderer.invoke('window:close'),
     hide: () => ipcRenderer.invoke('window:hide'),
-    isMaximized: (): Promise<boolean> => ipcRenderer.invoke('window:isMaximized')
+    isMaximized: (): Promise<boolean> => ipcRenderer.invoke('window:isMaximized'),
+    openDocument: (filePath: string, fileName: string) => ipcRenderer.invoke('window:open-document', filePath, fileName)
   },
   settings: {
     get: () => ipcRenderer.invoke('settings:get'),
     update: (partial: Record<string, unknown>) => ipcRenderer.invoke('settings:update', partial)
+  },
+  file: {
+    readText: (filePath: string): Promise<string> => ipcRenderer.invoke('file:read-text', filePath)
   }
 })

@@ -1,16 +1,18 @@
 <template>
   <el-tree
+    ref="treeRef"
     :data="categoryStore.tree"
     :props="{ children: 'children', label: 'label' }"
     node-key="id"
     highlight-current
-    :expand-on-click-node="true"
+    :expand-on-click-node="false"
     :current-node-key="categoryStore.selectedId"
     @node-click="handleNodeClick"
   >
     <template #default="{ node, data }">
       <div
         class="tree-node"
+        @dblclick.stop="handleNodeDblClick(data, node)"
         @contextmenu.prevent="showContextMenu($event, data, node)"
       >
         <el-icon :size="15" class="tree-folder-icon">
@@ -18,7 +20,6 @@
           <Folder v-else />
         </el-icon>
         <span class="tree-label">{{ data.label }}</span>
-        <span v-if="data.children && data.children.length > 0" class="tree-count">{{ data.children.length }}</span>
       </div>
     </template>
   </el-tree>
@@ -38,15 +39,16 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { Folder, FolderOpened } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import { useCategoryStore } from '@/stores/category'
-import { useToolStore } from '@/stores/tool'
 import CategoryDialog from './CategoryDialog.vue'
 import type { Category } from '@shared/types'
 
+const router = useRouter()
 const categoryStore = useCategoryStore()
-const toolStore = useToolStore()
+const treeRef = ref()
 
 const contextVisible = ref(false)
 const contextTarget = ref<Category | null>(null)
@@ -57,7 +59,15 @@ const editingCategory = ref<Category | null>(null)
 function handleNodeClick(data: { id: number }): void {
   contextVisible.value = false
   categoryStore.selectCategory(data.id)
-  toolStore.loadByCategory(data.id)
+  router.push('/')
+}
+
+function handleNodeDblClick(_data: unknown, node: { expanded: boolean; expand: () => void; collapse: () => void }): void {
+  if (node.expanded) {
+    node.collapse()
+  } else {
+    node.expand()
+  }
 }
 
 function showContextMenu(event: MouseEvent, data: { id: number; label: string; children?: unknown[] }, _node: unknown): void {
@@ -137,18 +147,6 @@ onMounted(async () => {
   white-space: nowrap;
   flex: 1;
   min-width: 0;
-}
-.tree-count {
-  flex-shrink: 0;
-  font-size: 10.5px;
-  font-weight: 550;
-  color: rgba(255,255,255,0.3);
-  background: rgba(255,255,255,0.08);
-  border-radius: 5px;
-  padding: 0 5px;
-  min-width: 18px;
-  text-align: center;
-  line-height: 17px;
 }
 .context-menu {
   position: fixed;

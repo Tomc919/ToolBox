@@ -119,18 +119,56 @@ app.on('window-all-closed', () => {
   }
 })
 
+function getSenderWindow(event: Electron.IpcMainInvokeEvent): BrowserWindow | null {
+  return BrowserWindow.fromWebContents(event.sender)
+}
+
 function registerWindowHandlers(): void {
-  ipcMain.handle('window:minimize', () => mainWindow?.minimize())
-  ipcMain.handle('window:maximize', () => {
-    if (mainWindow?.isMaximized()) {
-      mainWindow.unmaximize()
-    } else {
-      mainWindow?.maximize()
+  ipcMain.handle('window:minimize', (event) => {
+    const win = getSenderWindow(event)
+    win?.minimize()
+  })
+  ipcMain.handle('window:maximize', (event) => {
+    const win = getSenderWindow(event)
+    if (win) {
+      win.isMaximized() ? win.unmaximize() : win.maximize()
     }
   })
-  ipcMain.handle('window:close', () => mainWindow?.close())
-  ipcMain.handle('window:hide', () => mainWindow?.hide())
-  ipcMain.handle('window:isMaximized', () => mainWindow?.isMaximized() ?? false)
+  ipcMain.handle('window:close', (event) => {
+    const win = getSenderWindow(event)
+    win?.close()
+  })
+  ipcMain.handle('window:hide', () => {
+    mainWindow?.hide()
+  })
+  ipcMain.handle('window:isMaximized', (event) => {
+    const win = getSenderWindow(event)
+    return win?.isMaximized() ?? false
+  })
+  ipcMain.handle('window:open-document', (_event, filePath: string, fileName: string) => {
+    const docWin = new BrowserWindow({
+      width: 780,
+      height: 580,
+      minWidth: 480,
+      minHeight: 360,
+      frame: false,
+      titleBarStyle: 'hidden',
+      backgroundColor: '#f2f2f7',
+      title: fileName,
+      webPreferences: {
+        preload: path.join(__dirname, '../preload/index.js'),
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: false
+      }
+    })
+    const hash = `#/document?path=${encodeURIComponent(filePath)}&name=${encodeURIComponent(fileName)}&standalone=1`
+    if (process.env.ELECTRON_RENDERER_URL) {
+      docWin.loadURL(`${process.env.ELECTRON_RENDERER_URL}${hash}`)
+    } else {
+      docWin.loadFile(path.join(__dirname, '../renderer/index.html'), { hash })
+    }
+  })
 }
 
 app.on('before-quit', () => {

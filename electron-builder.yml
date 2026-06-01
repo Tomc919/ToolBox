@@ -7,6 +7,20 @@ directories:
 files:
   - out/**/*
 
+win:
+  icon: resources/icon.ico
+  target:
+    - target: nsis
+      arch: [x64]
+  sign: null
+  requestedExecutionLevel: asInvoker
+
+linux:
+  icon: resources/icon.png
+
+mac:
+  icon: resources/icon.icns
+
 asar: true
 asarUnpack:
   - "**/*.node"

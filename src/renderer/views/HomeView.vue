@@ -2,6 +2,7 @@
   <div class="home-view">
     <ToolGrid
       :tools="toolStore.tools"
+      :groups="toolStore.isGroupedView ? toolStore.toolGroups : undefined"
       :loading="toolStore.loading"
       @reload="reloadTools"
     />
@@ -25,12 +26,23 @@ function reloadTools(): void {
   } else if (toolStore.viewMode === 'recent') {
     toolStore.loadRecent()
   } else {
-    toolStore.loadByCategory(categoryStore.selectedId)
+    loadBySelected()
   }
 }
 
-watch(() => categoryStore.selectedId, (newId) => {
-  toolStore.loadByCategory(newId)
+function loadBySelected(): void {
+  const id = categoryStore.selectedId
+  if (id === null) {
+    toolStore.loadByCategory(null)
+  } else if (categoryStore.isParent(id)) {
+    toolStore.loadByParentCategory(id, (catId) => categoryStore.getCategoryNameById(catId))
+  } else {
+    toolStore.loadByCategory(id)
+  }
+}
+
+watch(() => categoryStore.selectedId, () => {
+  loadBySelected()
 })
 
 onMounted(() => {

@@ -4,6 +4,9 @@ import type { ScanCandidate } from '@shared/types'
 
 const EXTENSION_MAP: Record<string, string> = {
   '.exe': 'exe',
+  '.txt': 'txt',
+  '.log': 'txt',
+  '.md': 'txt',
   '.jar': 'jar',
   '.py': 'python',
   '.pyw': 'python',

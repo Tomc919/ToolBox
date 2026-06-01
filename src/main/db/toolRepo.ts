@@ -8,9 +8,29 @@ export function getByCategory(categoryId: number | null): Tool[] {
       'SELECT * FROM tool ORDER BY favorite DESC, name'
     ).all() as Tool[]
   }
+  // category 1 = 未分类，包含 category_id IS NULL 的历史数据
+  if (categoryId === 1) {
+    return db.prepare(
+      'SELECT * FROM tool WHERE category_id = 1 OR category_id IS NULL ORDER BY favorite DESC, name'
+    ).all() as Tool[]
+  }
   return db.prepare(
     'SELECT * FROM tool WHERE category_id = ? ORDER BY favorite DESC, name'
   ).all(categoryId) as Tool[]
+}
+
+export function getByParentCategory(parentId: number): Tool[] {
+  const db = getDatabase()
+  const childIds = db.prepare(
+    'SELECT id FROM category WHERE parent_id = ?'
+  ).all(parentId) as { id: number }[]
+
+  if (childIds.length === 0) return []
+
+  const placeholders = childIds.map(() => '?').join(',')
+  return db.prepare(
+    `SELECT * FROM tool WHERE category_id IN (${placeholders}) ORDER BY category_id, favorite DESC, name`
+  ).all(...childIds.map(r => r.id)) as Tool[]
 }
 
 export interface SearchScope {

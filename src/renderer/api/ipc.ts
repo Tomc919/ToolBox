@@ -11,6 +11,7 @@ export const moveCategory = (id: number, parentId: number | null, sort: number):
 
 // Tool
 export const fetchToolsByCategory = (categoryId: number | null): Promise<Tool[]> => api.tool.listByCategory(categoryId)
+export const fetchToolsByParentCategory = (parentId: number): Promise<Tool[]> => api.tool.listByParentCategory(parentId)
 export const searchTools = (query: string, scope?: { type: string; categoryId?: number | null }): Promise<Tool[]> => api.tool.search(query, scope)
 export const createTool = (data: ToolInput): Promise<Tool> => api.tool.create(data)
 export const updateTool = (id: number, data: ToolUpdate): Promise<Tool | undefined> => api.tool.update(id, data)

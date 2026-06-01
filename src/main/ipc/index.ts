@@ -5,6 +5,7 @@ import { registerScannerHandlers } from './scanner'
 import { registerIconHandlers } from './icon'
 import { registerDialogHandlers } from './dialog'
 import { registerSettingsHandlers } from './settings'
+import { registerFileHandlers } from './file'
 
 export function registerAllIpcHandlers(): void {
   registerCategoryHandlers()
@@ -14,4 +15,5 @@ export function registerAllIpcHandlers(): void {
   registerIconHandlers()
   registerDialogHandlers()
   registerSettingsHandlers()
+  registerFileHandlers()
 }
